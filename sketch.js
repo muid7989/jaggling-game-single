@@ -19,11 +19,11 @@ const BALL_NUM = 2;
 const BALL_START_X = GRID_SIZE*4;
 const BALL_START_Y = GRID_SIZE*6;
 const BALL_SIZE = GRID_SIZE;
-const BALL_COLOR = 120;
+const BALL_COLOR = 'red';
 const BALL_TOSS_SPEED = 32;
-const HAND_COLOR = 255;
+const HAND_COLOR = 'lightYellow';
 const HAND_CENTER_X = GRID_SIZE*8;
-const HAND_CENTER_Y = GRID_SIZE*9;
+const HAND_CENTER_Y = GRID_SIZE*11;
 const HAND_SIZE = GRID_SIZE*1.5;
 const HAND_SPEED = 15;
 const HAND_TOSS_ANGLE = 190;
@@ -32,17 +32,17 @@ const HAND_MOVE_R = GRID_SIZE*3;
 const CATCH_RANGE = 50;
 
 
-let upButton, downButton, leftButton, rightButton;
-let getButton;
+let leftButton, rightButton;
 let startButton;
 let startFlag = false;
 let startTime;
 let endTime = 0;
 let balls;
-let hands;
+let hands = {};
 
 let timeCount;
 const TEXT_VIEW_SIZE = 32;
+let countValue = 0;
 
 const DEBUG = true;
 const DEBUG_VIEW_X = 40;
@@ -51,55 +51,42 @@ const DEBUG_VIEW_H = 20;
 
 function preload() {
 }
-function upFn() {
-}
-function downFn() {
-}
 function leftFn() {
 }
 function rightFn() {
 }
 function startFn() {
-//	startFlag = true;
-//	startTime = millis();
-//	startButton.hide();
 	hands.move = true;
+	if (!startFlag){
+		startFlag = true;
+		countValue = 0;
+	}
 }
 function setup() {
 	createCanvas(CANVAS_W, CANVAS_H);
 	time = millis();
 	rectMode(CENTER);
 
-	upButton = buttonInit('↑', BUTTON_W, BUTTON_H, (CANVAS_W-BUTTON_W)/2, BUTTON_Y);
-	downButton = buttonInit('↓', BUTTON_W, BUTTON_H, (CANVAS_W-BUTTON_W)/2, BUTTON_Y+(BUTTON_H+BUTTON_M)*2);
-	leftButton = buttonInit('←', BUTTON_W, BUTTON_H, (CANVAS_W-BUTTON_W*3)/2-BUTTON_M, BUTTON_Y+BUTTON_H+BUTTON_M);
-	rightButton = buttonInit('→', BUTTON_W, BUTTON_H, (CANVAS_W+BUTTON_W)/2+BUTTON_M, BUTTON_Y+BUTTON_H+BUTTON_M);
-	startButton = buttonInit('START', BUTTON_W, BUTTON_H, (CANVAS_W-BUTTON_W)/2, BUTTON_Y-BUTTON_H*1.5);
-	upButton.mousePressed(upFn);
-	downButton.mousePressed(downFn);
-	leftButton.mousePressed(leftFn);
-	rightButton.mousePressed(rightFn);
+//	leftButton = buttonInit('←', BUTTON_W, BUTTON_H, (CANVAS_W-BUTTON_W*3)/2-BUTTON_M, BUTTON_Y+BUTTON_H+BUTTON_M);
+//	rightButton = buttonInit('→', BUTTON_W, BUTTON_H, (CANVAS_W+BUTTON_W)/2+BUTTON_M, BUTTON_Y+BUTTON_H+BUTTON_M);
+	startButton = buttonInit('START', BUTTON_W, BUTTON_H, (CANVAS_W-BUTTON_W)/2, BUTTON_Y+BUTTON_H+BUTTON_M);
+//	leftButton.mousePressed(leftFn);
+//	rightButton.mousePressed(rightFn);
 	startButton.mousePressed(startFn);
 	textAlign(CENTER,CENTER);
 
+	resetFn();
+}
+function resetFn() {
 	balls = [];
-	/*
-	balls.pos = {};
-	balls.pos.x = BALL_START_X;
-	balls.pos.y = BALL_START_Y;
-	balls.speed = {};
-	balls.speed.x = 0;
-	balls.speed.y = 0;
-	balls.caught = 0;
-	*/
 	let ball = ballInit();
 	balls.push(ball);
-	hands = {};
 	hands.angle = 0;
 	hands.toss = false;
 	hands.move = false;
 	hands.enable = false;
 	hands.ball = 0;
+	startFlag = false;
 }
 function ballInit() {
 	let ball = {};
@@ -135,13 +122,11 @@ function draw() {
 			line(i*GRID_SIZE, 0, i*GRID_SIZE, CANVAS_H);
 		}
 	}
-	if (startFlag==false){
-		fill(255);
-		stroke(255);
-		textSize(64);
-		textAlign(CENTER);
-		text(endTime.toFixed(1)+' sec', CANVAS_W/2, GRID_SIZE*3);
-	}
+	fill(255);
+	stroke(255);
+	textSize(64);
+	textAlign(CENTER);
+	text(countValue, CANVAS_W/2, GRID_SIZE*3);
 	if (hands.move){
 		if ((hands.angle<HAND_TOSS_ANGLE) && (hands.angle+HAND_SPEED >= HAND_TOSS_ANGLE)){
 			if (hands.ball>=0){
@@ -178,12 +163,14 @@ function draw() {
 			balls[i].pos.y += balls[i].speed.y;
 			balls[i].speed.y += GRAVITY;
 			if (balls[i].pos.y>=CANVAS_H){
-				balls.splice(i+i,1);
+				resetFn();
+				break;
 			}
 			if (sqrt((balls[i].pos.x-hx)*(balls[i].pos.x-hx)+(balls[i].pos.y-hy)*(balls[i].pos.y-hy)) <= CATCH_RANGE){
 				if (hands.enable && (hands.ball<0)){
 					balls[i].caught = true;
 					hands.ball = i;
+					countValue++;
 				}
 			}
 		}else{
@@ -202,7 +189,7 @@ function draw() {
 	debugY += DEBUG_VIEW_H;
 	text('ball:'+balls.length, DEBUG_VIEW_X,debugY);
 	debugY += DEBUG_VIEW_H;
-	text('hand:'+hands.enable, DEBUG_VIEW_X,debugY);
+	text('hand:'+hands.ball, DEBUG_VIEW_X,debugY);
 }
 function touchMoved() {
 	return false;
